@@ -1,0 +1,12 @@
+.gcloudignore
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+node_modules/
+*.md
+tests/
