@@ -1,7 +1,36 @@
 fastapi==0.115.5
 uvicorn[standard]==0.32.1
 pydantic==2.10.3
+python-dotenv==1.0.1
+
+# GCP
 google-cloud-aiplatform==1.74.0
 google-cloud-storage==2.19.0
 google-cloud-secret-manager==2.22.0
-python-dotenv==1.0.1
+cloud-sql-python-connector[pg8000]
+google-genai
+
+# Chunking & PDF parsing
+langchain-text-splitters==0.3.8
+pypdf==5.1.0
+
+# Vector store
+pgvector==0.3.6
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.36
+
+# Embeddings batch / data
+pandas==2.2.3
+pyarrow==18.1.0
+
+# Hybrid retrieval (Day 6)
+rank-bm25==0.2.2
+
+# Corpus downloader
+beautifulsoup4==4.12.3
+lxml==5.3.0
+requests==2.32.3
+
+# Observability (Day 9)
+opentelemetry-sdk==1.29.0
+opentelemetry-exporter-gcp-trace==1.8.0

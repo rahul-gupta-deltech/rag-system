@@ -15,12 +15,15 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
-COPY main.py .
+# Copy application code (modular layout)
+COPY app/ ./app/
+COPY ingestion/ ./ingestion/
+COPY db/ ./db/
+COPY .env.example ./.env.example
 
 # Cloud Run injects PORT; default to 8080
 ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT}"]

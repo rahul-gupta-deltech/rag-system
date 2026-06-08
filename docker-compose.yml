@@ -1,0 +1,60 @@
+# docker-compose.yml — local development stack
+# -----------------------------------------------
+# Mirrors the Cloud Run topology:
+#   frontend → backend (via BACKEND_URL)
+#   backend  → Cloud SQL Proxy (optional) or parquet fallback
+#
+# Quick start (offline / parquet mode — no DB or Vertex AI creds needed):
+#   OFFLINE_LLM=1 docker compose up --build
+#
+# Full mode (requires .env in rag-system/ with PROJECT_ID, DB_PASSWORD, etc.):
+#   docker compose up --build
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-backend:local
+    ports:
+      - "8080:8080"
+    environment:
+      # Pass through from host .env or override here
+      - PROJECT_ID=${PROJECT_ID:-local-dev}
+      - REGION=${REGION:-us-central1}
+      - LLM_MODEL=${LLM_MODEL:-gemma-4-31b-it}
+      - RETRIEVER_BACKEND=${RETRIEVER_BACKEND:-parquet}
+      - TOP_K=${TOP_K:-5}
+      - OFFLINE_LLM=${OFFLINE_LLM:-1}
+      - USE_HYBRID=${USE_HYBRID:-1}
+      - ENABLE_RERANK=${ENABLE_RERANK:-0}
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-ragdb}
+      - DB_USER=${DB_USER:-rag_user}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+    volumes:
+      # Mount corpus + parquet for local development without re-ingesting
+      - ./corpus:/app/corpus:ro
+      - ./embeddings.parquet:/app/embeddings.parquet:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: rag-frontend:local
+    ports:
+      - "8501:8501"
+    environment:
+      # Points to the backend container by service name (Docker internal DNS)
+      - BACKEND_URL=http://backend:8080
+      - APP_TITLE=${APP_TITLE:-RAG Knowledge Assistant (local)}
+    depends_on:
+      backend:
+        condition: service_healthy
