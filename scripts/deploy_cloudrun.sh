@@ -25,7 +25,7 @@ set -euo pipefail
 
 : "${PROJECT_ID:?Set PROJECT_ID}"
 REGION="${REGION:-us-central1}"
-REPO="${REGION}-docker.pkg.dev/${PROJECT_ID}/rag"
+REPO="${REGION}-docker.pkg.dev/${PROJECT_ID}/rag-system"
 
 echo "==> Project: $PROJECT_ID  Region: $REGION"
 echo "==> Artifact Registry repo: $REPO"
@@ -46,8 +46,8 @@ BACKEND_IMAGE="${REPO}/backend:$(git rev-parse --short HEAD 2>/dev/null || echo 
 echo ""
 echo "==> Building backend → ${BACKEND_IMAGE}"
 # Build from rag-system/ root (where the backend Dockerfile lives)
-docker build -t "${BACKEND_IMAGE}" "$(dirname "$0")/.."
-docker push "${BACKEND_IMAGE}"
+gcloud builds submit --project="${PROJECT_ID}" --region="${REGION}" --tag="${BACKEND_IMAGE}" "$(dirname "$0")/.."
+
 
 # ── 2. Deploy backend Cloud Run service ────────────────────────────────
 echo ""

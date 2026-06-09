@@ -34,13 +34,24 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Embedding
 # ---------------------------------------------------------------------------
-vertexai.init(project=PROJECT_ID, location=REGION)
-_embed_model = TextEmbeddingModel.from_pretrained(EMBEDDING_MODEL)
+# Lazy init: defer vertexai.init + from_pretrained until the first dense query.
+# Initializing at module scope would resolve ADC at import time, breaking
+# startup in offline/parquet mode (and any environment without credentials).
+_embed_model = None
+
+
+def _get_embed_model() -> TextEmbeddingModel:
+    """Lazily construct the embedding model on first use."""
+    global _embed_model
+    if _embed_model is None:
+        vertexai.init(project=PROJECT_ID, location=REGION)
+        _embed_model = TextEmbeddingModel.from_pretrained(EMBEDDING_MODEL)
+    return _embed_model
 
 
 def embed_query(query: str) -> list[float]:
     """Embed a query string with RETRIEVAL_QUERY task type."""
-    result = _embed_model.get_embeddings(
+    result = _get_embed_model().get_embeddings(
         [TextEmbeddingInput(text=query, task_type="RETRIEVAL_QUERY")]
     )
     return result[0].values
